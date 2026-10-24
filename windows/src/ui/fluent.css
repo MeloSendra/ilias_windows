@@ -1,0 +1,279 @@
+/* Windows 11 (Fluent / WinUI) design tokens and controls. */
+
+:root {
+  color-scheme: light dark;
+  --accent-base: #0f6cbd;
+  --accent: var(--accent-base);
+  --accent-hover: color-mix(in srgb, var(--accent) 90%, transparent);
+  --accent-press: color-mix(in srgb, var(--accent) 80%, transparent);
+  --on-accent: #fff;
+
+  --text: rgba(0, 0, 0, 0.896);
+  --text-2: rgba(0, 0, 0, 0.606);
+  --text-3: rgba(0, 0, 0, 0.446);
+  --text-disabled: rgba(0, 0, 0, 0.361);
+
+  --card: rgba(255, 255, 255, 0.7);
+  --card-hover: rgba(249, 249, 249, 0.5);
+  --card-stroke: rgba(0, 0, 0, 0.0578);
+  --control: rgba(255, 255, 255, 0.7);
+  --control-hover: rgba(249, 249, 249, 0.5);
+  --control-press: rgba(249, 249, 249, 0.3);
+  --control-disabled: rgba(249, 249, 249, 0.3);
+  --control-stroke: rgba(0, 0, 0, 0.0578);
+  --control-stroke-bottom: rgba(0, 0, 0, 0.1622);
+  --input-stroke-bottom: rgba(0, 0, 0, 0.4458);
+  --subtle-hover: rgba(0, 0, 0, 0.0373);
+  --subtle-press: rgba(0, 0, 0, 0.0241);
+  --divider: rgba(0, 0, 0, 0.0803);
+  --switch-off-stroke: rgba(0, 0, 0, 0.4458);
+  --switch-knob-off: rgba(0, 0, 0, 0.6063);
+
+  --success: #0f7b0f;
+  --caution: #9d5d00;
+  --critical: #c42b1c;
+  --critical-bg: #fde7e9;
+  --caution-bg: #fff4ce;
+  --success-bg: #dff6dd;
+
+  --solid-bg: #f3f3f3;
+  --flyout-bg: #f9f9f9;
+  --surface: transparent;
+
+  --radius-control: 4px;
+  --radius-card: 7px;
+  --radius-overlay: 8px;
+  --font: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --icons: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Windows uses a lighter shade of the accent on dark backgrounds. */
+    --accent: color-mix(in srgb, var(--accent-base) 55%, white);
+    --on-accent: #000;
+
+    --text: #fff;
+    --text-2: rgba(255, 255, 255, 0.786);
+    --text-3: rgba(255, 255, 255, 0.544);
+    --text-disabled: rgba(255, 255, 255, 0.3628);
+
+    --card: rgba(255, 255, 255, 0.0512);
+    --card-hover: rgba(255, 255, 255, 0.0837);
+    --card-stroke: rgba(0, 0, 0, 0.1);
+    --control: rgba(255, 255, 255, 0.0605);
+    --control-hover: rgba(255, 255, 255, 0.0837);
+    --control-press: rgba(255, 255, 255, 0.0326);
+    --control-disabled: rgba(255, 255, 255, 0.0419);
+    --control-stroke: rgba(255, 255, 255, 0.0698);
+    --control-stroke-bottom: rgba(255, 255, 255, 0.093);
+    --input-stroke-bottom: rgba(255, 255, 255, 0.5442);
+    --subtle-hover: rgba(255, 255, 255, 0.0605);
+    --subtle-press: rgba(255, 255, 255, 0.0419);
+    --divider: rgba(255, 255, 255, 0.0837);
+    --switch-off-stroke: rgba(255, 255, 255, 0.6047);
+    --switch-knob-off: rgba(255, 255, 255, 0.786);
+
+    --success: #6ccb5f;
+    --caution: #fce100;
+    --critical: #ff99a4;
+    --critical-bg: #442726;
+    --caution-bg: #433519;
+    --success-bg: #393d1b;
+
+    --solid-bg: #202020;
+    --flyout-bg: #2c2c2c;
+  }
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font: 14px/20px var(--font);
+  color: var(--text);
+  /* Transparent so the Mica / acrylic backdrop shows through; solid on older Windows. */
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  cursor: default;
+}
+
+html.no-material body { background: var(--solid-bg); }
+
+.ico {
+  font-family: var(--icons);
+  font-style: normal;
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+/* ----- buttons ----- */
+
+.btn {
+  font: inherit;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 32px;
+  padding: 5px 12px 6px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--control-stroke);
+  border-bottom-color: var(--control-stroke-bottom);
+  background: var(--control);
+  white-space: nowrap;
+}
+.btn:hover { background: var(--control-hover); }
+.btn:active { background: var(--control-press); color: var(--text-2); border-bottom-color: var(--control-stroke); }
+.btn:disabled { background: var(--control-disabled); color: var(--text-disabled); border-color: var(--control-stroke); }
+.btn .ico { font-size: 14px; }
+
+.btn.accent {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: rgba(255, 255, 255, 0.08);
+  border-bottom-color: rgba(0, 0, 0, 0.4);
+}
+.btn.accent:hover { background: var(--accent-hover); }
+.btn.accent:active { background: var(--accent-press); color: color-mix(in srgb, var(--on-accent) 75%, transparent); }
+.btn.accent:disabled { background: var(--text-disabled); color: var(--solid-bg); border-color: transparent; }
+
+.btn.subtle { background: transparent; border-color: transparent; }
+.btn.subtle:hover { background: var(--subtle-hover); }
+.btn.subtle:active { background: var(--subtle-press); }
+
+.btn.small { min-height: 24px; padding: 2px 8px 3px; font-size: 12px; }
+
+:focus-visible { outline: 2px solid var(--text); outline-offset: 1px; border-radius: var(--radius-control); }
+
+/* ----- text input ----- */
+
+.input {
+  font: inherit;
+  color: var(--text);
+  height: 32px;
+  padding: 5px 10px 6px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--control-stroke);
+  border-bottom-color: var(--input-stroke-bottom);
+  background: var(--control);
+  outline: none;
+  user-select: text;
+}
+.input:hover { background: var(--control-hover); }
+.input:focus {
+  background: var(--solid-bg);
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 5px;
+}
+.input::placeholder { color: var(--text-3); }
+
+select.input { padding-right: 32px; appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-2) 50%), linear-gradient(135deg, var(--text-2) 50%, transparent 50%);
+  background-position: calc(100% - 16px) 14px, calc(100% - 12px) 14px;
+  background-size: 4px 4px;
+  background-repeat: no-repeat;
+}
+select.input:focus { border-bottom: 1px solid var(--input-stroke-bottom); padding-bottom: 6px; }
+select.input option { background: var(--solid-bg); color: var(--text); }
+
+/* ----- toggle switch ----- */
+
+.switch {
+  appearance: none;
+  position: relative;
+  flex: none;
+  width: 40px;
+  height: 20px;
+  margin: 0;
+  border-radius: 10px;
+  border: 1px solid var(--switch-off-stroke);
+  background: var(--control-press);
+  transition: background 0.1s;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--switch-knob-off);
+  transform: translateY(-50%);
+  transition: left 0.15s cubic-bezier(0.5, 0, 0, 1), width 0.1s, height 0.1s;
+}
+.switch:hover::after { width: 14px; height: 14px; left: 2px; }
+.switch:active::after { width: 17px; }
+.switch:checked { background: var(--accent); border-color: var(--accent); }
+.switch:checked::after { left: 22px; background: var(--on-accent); }
+.switch:checked:hover::after { left: 21px; }
+.switch:checked:active::after { left: 18px; }
+.switch:disabled { opacity: 0.45; }
+
+/* ----- checkbox ----- */
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.check input {
+  appearance: none;
+  margin: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--switch-off-stroke);
+  background: var(--control-press);
+  display: grid;
+  place-content: center;
+  flex: none;
+}
+.check input:hover { background: var(--subtle-hover); }
+.check input:checked { background: var(--accent); border-color: var(--accent); }
+.check input:checked::after {
+  content: "\E73E";
+  font-family: var(--icons);
+  font-size: 12px;
+  color: var(--on-accent);
+}
+
+/* ----- progress ring ----- */
+
+.ring {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--accent);
+  border-right-color: var(--accent);
+  animation: spin 0.9s linear infinite;
+  flex: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ----- scrollbars ----- */
+
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-thumb {
+  background: var(--text-3);
+  border: 5px solid transparent;
+  border-radius: 6px;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { border-width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.app-glyph { width: 16px; height: 16px; flex: none; }

@@ -9,7 +9,7 @@ import { IliasClient } from "./ilias/client.js";
 import { installStartup, uninstallStartup } from "./startup.js";
 import { deletePassword, getPassword, setPassword } from "./keychain.js";
 import { parseSemester } from "./ilias/parse.js";
-import { startControlServer } from "./server.js";
+import { isDaemonRunning, startControlServer } from "./server.js";
 import { sanitizeName } from "./sync/fsnames.js";
 
 const DEFAULT_BASE_URL = "https://ilias3.uni-stuttgart.de/";
@@ -97,6 +97,11 @@ program.command("sync").description("Run one sync pass")
 program.command("watch").description("Keep running and sync periodically (and after wake-up)")
   .option("-i, --interval <minutes>", "minutes between checks")
   .action(async (opts: { interval?: string }) => {
+    // The tray app and the Startup entry may both try to start the daemon at login.
+    if (await isDaemonRunning()) {
+      log("Background sync is already running.");
+      return;
+    }
     // Runs even without a config so local clients can complete setup via the control API.
     const daemon = new Daemon(undefined, undefined, opts.interval ? Number(opts.interval) : undefined);
     const { port } = await startControlServer(daemon);

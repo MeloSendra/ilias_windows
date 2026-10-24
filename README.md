@@ -77,6 +77,26 @@ The background process exposes a local, token-protected control API on
 %USERPROFILE%\.config\ilias-sync\daemon.json
 ```
 
+## Tray app
+
+The `windows` directory contains a system-tray app, the Windows counterpart of
+the macOS menu-bar app. It shows the sync status in the notification area,
+opens a flyout with recent files and course folders when clicked, and has a
+Windows 11–style settings window for the account, courses and interval. It
+talks to the background `watch` process and starts it if it is not running.
+
+```powershell
+npm run build          # the tray app runs dist\cli.js
+cd windows
+npm install
+npm start
+```
+
+Right-click the tray icon for the classic menu. Under **Settings › General**,
+turn on **Start ILIAS Sync when I sign in** to launch it at login; you then
+don't need `install`. If you keep both, they won't run two background
+processes: `watch` exits if one is already running.
+
 ## How it works
 
 1. `setup` logs in to ILIAS and discovers the courses available on the
@@ -105,5 +125,5 @@ npm run build
 ```
 
 The `macos` directory is retained as historical source from the original
-project. This fork targets the Windows CLI and Windows background startup
-workflow; the Swift menu-bar application is not part of the Windows build.
+project. The Swift menu-bar application is not part of the Windows build; the
+`windows` tray app replaces it.
