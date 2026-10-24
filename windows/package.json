@@ -6,9 +6,39 @@
   "type": "module",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "package": "electron-builder --win portable -p never"
   },
   "devDependencies": {
-    "electron": "^44.9.3"
+    "electron": "^44.9.3",
+    "electron-builder": "^26.0.19"
+  },
+  "build": {
+    "appId": "de.ilias-sync.tray",
+    "productName": "ILIAS Sync",
+    "directories": {
+      "output": "release-build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist",
+        "to": "cli/dist"
+      },
+      {
+        "from": "../node_modules",
+        "to": "cli/node_modules"
+      },
+      {
+        "from": "../package.json",
+        "to": "cli/package.json"
+      }
+    ],
+    "win": {
+      "target": "portable"
+    }
   }
 }
