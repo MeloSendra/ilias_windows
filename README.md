@@ -79,11 +79,11 @@ The background process exposes a local, token-protected control API on
 
 ## Tray app
 
-The `windows` directory contains a system-tray app, the Windows counterpart of
-the macOS menu-bar app. It shows the sync status in the notification area,
-opens a flyout with recent files and course folders when clicked, and has a
-Windows 11–style settings window for the account, courses and interval. It
-talks to the background `watch` process and starts it if it is not running.
+The `windows` directory contains a system-tray app. It shows the sync status
+in the notification area, opens a flyout with recent files and course folders
+when clicked, and has a Windows 11–style settings window for the account,
+courses and interval. It talks to the background `watch` process and starts it
+if it is not running.
 
 ```powershell
 npm run build          # the tray app runs dist\cli.js
@@ -91,6 +91,13 @@ cd windows
 npm install
 npm start
 ```
+
+For a checkout-style package, double-click `windows\Start ILIAS Sync.cmd`
+after installing dependencies. Tagged GitHub releases also provide a portable
+`ILIAS Sync.exe` that includes the CLI and its dependencies, so it can be
+started directly without Node.js or a repository checkout. Releases are
+created by pushing a version tag such as `v1.2.0`; the workflow also supports
+manual runs for build verification.
 
 Right-click the tray icon for the classic menu. Under **Settings › General**,
 turn on **Start ILIAS Sync when I sign in** to launch it at login; you then

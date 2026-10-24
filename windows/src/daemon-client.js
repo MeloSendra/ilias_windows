@@ -7,9 +7,18 @@ import { fileURLToPath } from "node:url";
 
 export const CONFIG_DIR = process.env.ILIAS_SYNC_CONFIG_DIR ?? join(homedir(), ".config", "ilias-sync");
 export const LOG_PATH = join(CONFIG_DIR, "ilias-sync.log");
-/** The ilias-sync checkout this app lives in; its compiled CLI runs the background job. */
+/** Dev: the ilias-sync checkout this app lives in. Packaged: bundled as an extraResource instead. */
 const REPO_DIR = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const CLI_PATH = join(REPO_DIR, "dist", "cli.js");
+const DEV_CLI_PATH = join(REPO_DIR, "dist", "cli.js");
+const PACKAGED_CLI_PATH = process.resourcesPath ? join(process.resourcesPath, "cli", "dist", "cli.js") : undefined;
+
+/** Prefers the bundled CLI (packaged .exe) over the checkout's, if both are present. */
+async function resolveCli() {
+  if (PACKAGED_CLI_PATH && (await access(PACKAGED_CLI_PATH).then(() => true, () => false))) {
+    return { cliPath: PACKAGED_CLI_PATH, cwd: dirname(dirname(PACKAGED_CLI_PATH)) };
+  }
+  return { cliPath: DEV_CLI_PATH, cwd: REPO_DIR };
+}
 
 export class NotRunningError extends Error {
   constructor() {
@@ -50,8 +59,9 @@ export async function request(method, path, body, { timeoutMs = 60_000 } = {}) {
 
 /** Stops a running background job (if any) and starts `ilias-sync watch` detached from this app. */
 export async function restartBackgroundJob() {
-  await access(CLI_PATH).catch(() => {
-    throw new Error(`${CLI_PATH} not found. Run "npm run build" in ${REPO_DIR} first.`);
+  const { cliPath, cwd } = await resolveCli();
+  await access(cliPath).catch(() => {
+    throw new Error(`${cliPath} not found. Run "npm run build" in ${REPO_DIR} first.`);
   });
   const running = await request("GET", "/api/status", undefined, { timeoutMs: 2000 }).then(() => true, () => false);
   if (running) {
@@ -62,8 +72,8 @@ export async function restartBackgroundJob() {
   await mkdir(CONFIG_DIR, { recursive: true });
   const log = openSync(LOG_PATH, "a");
   try {
-    const child = spawn("node", [CLI_PATH, "watch"], {
-      cwd: REPO_DIR,
+    const child = spawn("node", [cliPath, "watch"], {
+      cwd,
       detached: true,
       stdio: ["ignore", log, log],
       windowsHide: true,
