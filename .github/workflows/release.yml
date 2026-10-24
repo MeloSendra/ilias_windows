@@ -7,12 +7,17 @@ name: Release
 #   git tag v1.2.0
 #   git push origin v1.2.0
 #
-# `workflow_dispatch` is there so a build can be re-run manually without
-# cutting a new tag; it does not publish a release.
+# `workflow_dispatch` is there so a build can be re-run manually and publish
+# an explicitly selected tag.
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Version tag to publish (for example, v1.0.0)
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -21,10 +26,10 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 24
       - name: Build CLI
         run: |
           npm ci
@@ -37,7 +42,7 @@ jobs:
         run: |
           Compress-Archive -Path dist, node_modules, package.json, windows `
             -DestinationPath ilias-sync-windows.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ilias-sync-windows
           path: ilias-sync-windows.zip
@@ -49,22 +54,23 @@ jobs:
         run: |
           $exe = Get-ChildItem -Path windows/release-build -Filter *.exe -Recurse | Select-Object -First 1
           Copy-Item $exe.FullName "ILIAS Sync.exe"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: ilias-sync-windows-exe
           path: "ILIAS Sync.exe"
 
   release:
     needs: windows
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           path: artifacts
           merge-multiple: true
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
           files: |
             artifacts/ilias-sync-windows.zip
             artifacts/ILIAS Sync.exe
