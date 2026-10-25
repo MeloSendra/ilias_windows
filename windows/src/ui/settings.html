@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <title>ILIAS Sync Settings</title>
+  <link rel="stylesheet" href="fluent.css">
+  <link rel="stylesheet" href="settings.css">
+  <script type="module" src="settings.js"></script>
+</head>
+<body>
+  <header class="titlebar">
+    <span id="glyph"></span>
+    <span>ILIAS Sync Settings</span>
+  </header>
+
+  <div class="shell">
+    <nav class="nav">
+      <div class="profile">
+        <div class="avatar" id="avatar"><i class="ico">&#xE77B;</i></div>
+        <div class="profile-text">
+          <div class="profile-name" id="profile-name">Not signed in</div>
+          <div class="profile-sub" id="profile-sub">ILIAS</div>
+        </div>
+      </div>
+      <button class="nav-item" data-page="account"><i class="ico">&#xE77B;</i>Account</button>
+      <button class="nav-item" data-page="courses"><i class="ico">&#xE8F1;</i>Courses<span class="nav-count" id="nav-count"></span></button>
+      <button class="nav-item" data-page="general"><i class="ico">&#xE713;</i>General</button>
+    </nav>
+
+    <main class="content">
+      <div class="scroll" id="scroll">
+
+        <!-- Account -->
+        <section class="page" id="page-account">
+          <h1>Account</h1>
+          <div class="group">
+            <label class="card row">
+              <i class="ico lead">&#xE774;</i>
+              <div class="row-text"><div class="row-title">ILIAS address</div><div class="row-desc">The web address of your university's ILIAS</div></div>
+              <input class="input wide" id="baseUrl" type="url" spellcheck="false">
+            </label>
+            <label class="card row">
+              <i class="ico lead">&#xE77B;</i>
+              <div class="row-text"><div class="row-title">Username</div><div class="row-desc">The name you use to sign in to ILIAS</div></div>
+              <input class="input wide" id="username" type="text" spellcheck="false" autocomplete="off">
+            </label>
+            <label class="card row">
+              <i class="ico lead">&#xE72E;</i>
+              <div class="row-text"><div class="row-title">Password</div><div class="row-desc" id="password-desc">Required</div></div>
+              <input class="input wide" id="password" type="password" autocomplete="off">
+            </label>
+          </div>
+          <div class="group">
+            <div class="card row">
+              <i class="ico lead">&#xE8D7;</i>
+              <div class="row-text"><div class="row-title">Check your sign-in</div><div class="row-desc">Signs in to ILIAS with these details without saving them</div></div>
+              <button class="btn" id="test-login">Test login</button>
+            </div>
+          </div>
+          <p class="hint"><i class="ico">&#xE946;</i>Your password is stored in Windows Credential Manager, never in a file.</p>
+        </section>
+
+        <!-- Courses -->
+        <section class="page" id="page-courses" hidden>
+          <div class="page-head">
+            <h1>Courses</h1>
+            <div class="search">
+              <i class="ico">&#xE721;</i>
+              <input class="input" id="filter" type="search" placeholder="Find a course" spellcheck="false">
+            </div>
+          </div>
+          <div class="toolbar">
+            <span id="selected-count"></span>
+            <button class="btn" id="reload"><i class="ico">&#xE72C;</i>Reload from ILIAS</button>
+          </div>
+          <div id="course-list"></div>
+          <div class="empty" id="course-empty" hidden>
+            <i class="ico">&#xE8F1;</i>
+            <div class="empty-title">No courses loaded</div>
+            <div class="empty-desc">Enter your account details, then reload the course list from ILIAS.</div>
+            <div class="empty-actions">
+              <button class="btn" id="to-account">Go to Account</button>
+              <button class="btn accent" id="reload-empty">Reload from ILIAS</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- General -->
+        <section class="page" id="page-general" hidden>
+          <h1>General</h1>
+          <div class="group">
+            <div class="card row">
+              <i class="ico lead">&#xE823;</i>
+              <div class="row-text"><div class="row-title">Check for new files</div><div class="row-desc">A sync also runs shortly after your PC wakes up</div></div>
+              <select class="input" id="interval">
+                <option value="15">Every 15 minutes</option>
+                <option value="30">Every 30 minutes</option>
+                <option value="60">Every hour</option>
+                <option value="120">Every 2 hours</option>
+                <option value="240">Every 4 hours</option>
+              </select>
+            </div>
+            <div class="card row">
+              <i class="ico lead">&#xE8B7;</i>
+              <div class="row-text"><div class="row-title">Default folder for new courses</div><div class="row-desc path" id="baseDir"></div></div>
+              <button class="btn" id="choose-base">Browse…</button>
+            </div>
+          </div>
+
+          <h2>Startup</h2>
+          <div class="group">
+            <label class="card row">
+              <i class="ico lead">&#xE7E8;</i>
+              <div class="row-text"><div class="row-title">Start ILIAS Sync when I sign in</div><div class="row-desc">Shows the tray icon and starts the background sync</div></div>
+              <span class="switch-label" id="login-label">Off</span>
+              <input class="switch" id="open-at-login" type="checkbox">
+            </label>
+            <div class="card row">
+              <i class="ico lead">&#xE895;</i>
+              <div class="row-text"><div class="row-title">Background sync</div><div class="row-desc" id="daemon-state">Connecting…</div></div>
+              <button class="btn" id="restart">Restart</button>
+            </div>
+          </div>
+
+          <h2>Troubleshooting</h2>
+          <div class="group">
+            <button class="card row link" id="show-log">
+              <i class="ico lead">&#xE9F9;</i>
+              <div class="row-text"><div class="row-title">Show log</div><div class="row-desc path" id="log-path"></div></div>
+              <i class="ico trail">&#xE8A7;</i>
+            </button>
+            <button class="card row link" id="open-config">
+              <i class="ico lead">&#xE838;</i>
+              <div class="row-text"><div class="row-title">Open config folder</div><div class="row-desc path" id="config-path"></div></div>
+              <i class="ico trail">&#xE8A7;</i>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <footer class="bar">
+        <div class="status" id="status"></div>
+        <button class="btn" id="revert" hidden>Discard changes</button>
+        <button class="btn accent" id="save" disabled>Save</button>
+      </footer>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <title>ILIAS Sync</title>
+  <link rel="stylesheet" href="fluent.css">
+  <link rel="stylesheet" href="flyout.css">
+  <script type="module" src="flyout.js"></script>
+</head>
+<body>
+  <div class="flyout" id="root">
+    <header class="head">
+      <span id="glyph"></span>
+      <div class="head-text">
+        <div class="title">ILIAS Sync</div>
+        <div class="sub" id="headline">Connecting…</div>
+      </div>
+      <button class="btn subtle icon-btn" id="settings" title="Settings"><i class="ico">&#xE713;</i></button>
+    </header>
+
+    <div class="banner" id="banner" hidden>
+      <i class="ico" id="banner-icon">&#xE7BA;</i>
+      <div class="banner-text" id="banner-text"></div>
+      <button class="btn small" id="banner-action" hidden></button>
+    </div>
+
+    <div class="actions">
+      <button class="btn accent" id="sync"><i class="ico" id="sync-icon">&#xE895;</i><span id="sync-label">Sync now</span></button>
+      <button class="btn" id="pause"><i class="ico" id="pause-icon">&#xE769;</i><span id="pause-label">Pause</span></button>
+    </div>
+
+    <section id="recent-section" hidden>
+      <h2>Recent files</h2>
+      <ul class="list" id="recent"></ul>
+    </section>
+
+    <section id="courses-section" hidden>
+      <h2>Course folders</h2>
+      <ul class="list" id="courses"></ul>
+    </section>
+
+    <footer class="foot">
+      <span class="next" id="next"></span>
+      <button class="btn subtle small" id="log"><i class="ico">&#xE9F9;</i>Log</button>
+      <button class="btn subtle small" id="quit" title="Quit the tray app (the background sync keeps running)"><i class="ico">&#xE7E8;</i></button>
+    </footer>
+  </div>
+</body>
+</html>
