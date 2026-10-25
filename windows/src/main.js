@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, screen, shell, 
 import { existsSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { homedir, release } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -265,6 +266,7 @@ async function checkForUpdate() {
     latestVersion: release.tag_name.replace(/^v/i, ""),
     available: isNewerVersion(release.tag_name, app.getVersion()),
     downloadUrl: asset.browser_download_url,
+    digest: asset.digest,
     supported: true,
   };
 }
@@ -273,9 +275,11 @@ function quoteCmd(value) {
   return `"${String(value).replace(/"/g, "\"\"")}"`;
 }
 
-async function installUpdate(downloadUrl) {
+async function installUpdate() {
   if (!app.isPackaged || process.platform !== "win32") throw new Error("Updates are available only for packaged Windows releases.");
-  const response = await fetch(downloadUrl, {
+  const update = await checkForUpdate();
+  if (!update.available || !update.downloadUrl) throw new Error("No newer release is available.");
+  const response = await fetch(update.downloadUrl, {
     headers: { Accept: "application/octet-stream", "User-Agent": "ILIAS-Sync" },
     signal: AbortSignal.timeout(300_000),
   });
@@ -283,6 +287,11 @@ async function installUpdate(downloadUrl) {
   const bytes = Buffer.from(await response.arrayBuffer());
   if (bytes.length < 1_000_000 || bytes.subarray(0, 2).toString("ascii") !== "MZ") {
     throw new Error("The downloaded update is not a valid Windows executable.");
+  }
+  const expected = update.digest;
+  const actual = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+  if (!expected || actual !== expected.toLowerCase()) {
+    throw new Error("The downloaded update failed its SHA-256 integrity check.");
   }
 
   await mkdir(CONFIG_DIR, { recursive: true });
@@ -365,7 +374,7 @@ function registerIpc() {
   ipcMain.handle("update:install", async () => {
     const update = await checkForUpdate();
     if (!update.available) throw new Error("No newer release is available.");
-    return installUpdate(update.downloadUrl);
+    return installUpdate();
   });
   ipcMain.handle("uninstall", (_e, removeData) => uninstall(!!removeData));
 
