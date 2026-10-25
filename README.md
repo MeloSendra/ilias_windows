@@ -115,6 +115,16 @@ started directly without Node.js or a repository checkout. Releases are
 created by pushing a version tag such as `v1.2.0`; the workflow also supports
 manual runs for build verification.
 
+Packaged Windows builds can check **Settings › General › App › Check for
+updates**. Updates are downloaded from the matching GitHub Release and applied
+after the tray app exits; the app cannot replace its own running portable
+executable. Source/check-out runs do not self-update.
+
+The same section provides **Uninstall**. It removes startup registration and
+preserves configuration, logs, and downloaded course files by default. A
+second confirmation can remove those files as well. Uninstalling never removes
+course files unless that destructive option is explicitly confirmed.
+
 Right-click the tray icon for the classic menu. Under **Settings › General**,
 turn on **Start ILIAS Sync when I sign in** to launch it at login; you then
 don't need `install`. If you keep both, they won't run two background

@@ -22,6 +22,7 @@ const model = {
   error: null,
   notice: null,
   saved: null,
+  update: null,
 };
 
 // ---------- helpers ----------
@@ -159,6 +160,8 @@ function renderChrome() {
   $("revert").hidden = !dirty || !model.saved;
   $("test-login").disabled = !!model.busy || !model.username || (!model.hasPassword && !model.password);
   $("reload").disabled = $("reload-empty").disabled = !!model.busy || !model.username;
+  $("check-update").disabled = !!model.busy;
+  $("uninstall").disabled = !!model.busy;
 }
 
 function render() {
@@ -177,6 +180,10 @@ function render() {
     : "Required to sign in";
 
   setPath($("baseDir"), model.baseDir);
+  $("version-state").textContent = model.app.packaged
+    ? `Version ${model.app.version}${model.update?.available ? ` · ${model.update.latestVersion} available` : ""}`
+    : `Version ${model.app.version} · packaged builds can update`;
+  $("check-update").textContent = model.update?.available ? `Download ${model.update.latestVersion}` : "Check for updates";
   $("nav-count").textContent = model.selected.size ? String(model.selected.size) : "";
   renderCourses();
 }
@@ -291,6 +298,26 @@ $("restart").onclick = async () => {
   await window.ilias.action("start-daemon");
   $("restart").disabled = false;
   if (!model.saved) load();
+};
+model.app = app;
+$("check-update").onclick = () => run("Checking for updates…", async () => {
+  const update = await window.ilias.checkForUpdate();
+  model.update = update;
+  if (!update.supported) {
+    model.notice = "Updates are available from packaged Windows releases.";
+  } else if (!update.available) {
+    model.notice = `You are up to date (version ${update.currentVersion}).`;
+  } else if (window.confirm(`Version ${update.latestVersion} is available. Download and install it now?`)) {
+    await run("Downloading update…", () => window.ilias.installUpdate());
+    return;
+  }
+});
+$("uninstall").onclick = async () => {
+  if (!window.confirm("Uninstall ILIAS Sync? Startup registration will be removed.")) return;
+  const removeData = window.confirm(
+    "Also delete your ILIAS Sync settings, logs, and downloaded course files?\n\nChoose Cancel to keep them.",
+  );
+  await window.ilias.uninstall(removeData);
 };
 setPath($("log-path"), app.logPath);
 setPath($("config-path"), app.configDir);
