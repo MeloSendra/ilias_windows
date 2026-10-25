@@ -1,7 +1,7 @@
 {
   "name": "ilias-sync-tray",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Windows tray app and settings window for ilias-sync",
   "type": "module",
   "main": "src/main.js",
