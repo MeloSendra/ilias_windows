@@ -17,6 +17,7 @@ on:
         type: string
 
 permissions:
+  actions: write
   contents: write
 
 jobs:
@@ -80,6 +81,7 @@ jobs:
       - name: Commit version and push tag
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -89,3 +91,4 @@ jobs:
           git tag "v$VERSION"
           git push origin HEAD:main
           git push origin "v$VERSION"
+          gh workflow run release.yml --ref "v$VERSION" -f tag="v$VERSION"

@@ -119,7 +119,9 @@ To create a release without editing versions and tags manually, use
 **Actions › Bump and release** on GitHub. Choose a patch, minor, or major
 bump. The workflow updates both package manifests, commits the new version to
 `main`, creates the matching `vX.Y.Z` tag, and pushes it. That tag then starts
-the release build.
+the release build. The workflow explicitly starts the release workflow after
+tagging because GitHub does not trigger a second workflow from a
+`GITHUB_TOKEN`-created push.
 
 Packaged Windows builds can check **Settings › General › App › Check for
 updates**. Updates are downloaded from the matching GitHub Release and applied
