@@ -1,7 +1,9 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeTheme, screen, shell, systemPreferences, Tray } from "electron";
 import { existsSync } from "node:fs";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
 import { homedir, release } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CONFIG_DIR, LOG_PATH, NotRunningError, request, restartBackgroundJob } from "./daemon-client.js";
 import { renderIcons } from "./icons.js";
@@ -12,6 +14,11 @@ const preload = join(here, "preload.cjs");
 /** Mica and acrylic backdrops need Windows 11 22H2 (build 22621) or newer. */
 const hasMaterial = process.platform === "win32" && Number(release().split(".")[2]) >= 22621;
 const FLYOUT_WIDTH = 368;
+const RELEASE_API = "https://api.github.com/repos/MeloSendra/ilias_windows/releases/latest";
+const STARTUP_FILE = join(
+  process.env.APPDATA ?? join(homedir(), "AppData", "Roaming"),
+  "Microsoft", "Windows", "Start Menu", "Programs", "Startup", "ILIAS Sync.cmd",
+);
 
 let tray;
 let icons;
@@ -226,6 +233,107 @@ function openSettings(page) {
 
 const loginItem = () => ({ path: process.execPath, args: [app.getAppPath()] });
 
+function versionParts(value) {
+  const match = String(value).replace(/^v/i, "").match(/^(\d+)\.(\d+)\.(\d+)/);
+  return match ? match.slice(1).map(Number) : null;
+}
+
+function isNewerVersion(candidate, current) {
+  const next = versionParts(candidate);
+  const installed = versionParts(current);
+  if (!next || !installed) return false;
+  for (let index = 0; index < next.length; index++) {
+    if (next[index] !== installed[index]) return next[index] > installed[index];
+  }
+  return false;
+}
+
+async function checkForUpdate() {
+  if (process.platform !== "win32" || !app.isPackaged) {
+    return { currentVersion: app.getVersion(), available: false, supported: false };
+  }
+  const response = await fetch(RELEASE_API, {
+    headers: { Accept: "application/vnd.github+json", "User-Agent": "ILIAS-Sync" },
+    signal: AbortSignal.timeout(15_000),
+  });
+  if (!response.ok) throw new Error(`GitHub Releases returned HTTP ${response.status}.`);
+  const release = await response.json();
+  const asset = release.assets?.find((item) => item.name === "ILIAS.Sync.exe" || item.label === "ILIAS Sync.exe");
+  if (!release.tag_name || !asset?.browser_download_url) throw new Error("The latest release has no Windows executable asset.");
+  return {
+    currentVersion: app.getVersion(),
+    latestVersion: release.tag_name.replace(/^v/i, ""),
+    available: isNewerVersion(release.tag_name, app.getVersion()),
+    downloadUrl: asset.browser_download_url,
+    supported: true,
+  };
+}
+
+function quoteCmd(value) {
+  return `"${String(value).replace(/"/g, "\"\"")}"`;
+}
+
+async function installUpdate(downloadUrl) {
+  if (!app.isPackaged || process.platform !== "win32") throw new Error("Updates are available only for packaged Windows releases.");
+  const response = await fetch(downloadUrl, {
+    headers: { Accept: "application/octet-stream", "User-Agent": "ILIAS-Sync" },
+    signal: AbortSignal.timeout(300_000),
+  });
+  if (!response.ok) throw new Error(`Could not download the update (HTTP ${response.status}).`);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length < 1_000_000 || bytes.subarray(0, 2).toString("ascii") !== "MZ") {
+    throw new Error("The downloaded update is not a valid Windows executable.");
+  }
+
+  await mkdir(CONFIG_DIR, { recursive: true });
+  const staged = join(CONFIG_DIR, `ILIAS Sync.update-${process.pid}.exe`);
+  const script = join(CONFIG_DIR, `ILIAS Sync.update-${process.pid}.cmd`);
+  const target = resolve(process.execPath);
+  await writeFile(staged, bytes);
+  await writeFile(script, [
+    "@echo off",
+    "setlocal",
+    "timeout /t 2 /nobreak >nul",
+    `copy /y ${quoteCmd(staged)} ${quoteCmd(target)} >nul`,
+    "if errorlevel 1 exit /b 1",
+    `start "" ${quoteCmd(target)}`,
+    `del ${quoteCmd(staged)}`,
+    `del "%~f0"`,
+    "",
+  ].join("\r\n"), "utf8");
+  const child = spawn(process.env.ComSpec ?? "cmd.exe", ["/d", "/c", script], {
+    detached: true,
+    windowsHide: true,
+    stdio: "ignore",
+  });
+  child.unref();
+  app.quit();
+}
+
+async function uninstall(removeData) {
+  app.setLoginItemSettings({ ...loginItem(), openAtLogin: false });
+  await rm(STARTUP_FILE, { force: true });
+  const daemon = await infoForUninstall();
+  if (daemon?.pid) {
+    try { process.kill(daemon.pid); } catch { /* already gone */ }
+  }
+  if (removeData) {
+    const config = JSON.parse(await readFile(join(CONFIG_DIR, "config.json"), "utf8").catch(() => "{}"));
+    const courseDirs = [...new Set((config.courses ?? []).map((course) => course.targetDir).filter(Boolean))];
+    await Promise.all(courseDirs.map((path) => rm(path, { recursive: true, force: true })));
+    await rm(CONFIG_DIR, { recursive: true, force: true });
+  }
+  app.quit();
+}
+
+async function infoForUninstall() {
+  try {
+    return JSON.parse(await readFile(join(CONFIG_DIR, "daemon.json"), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
 function registerIpc() {
   ipcMain.handle("status:get", () => ({ status, error: statusError }));
 
@@ -249,7 +357,17 @@ function registerIpc() {
     logPath: LOG_PATH,
     configDir: CONFIG_DIR,
     openAtLogin: app.getLoginItemSettings(loginItem()).openAtLogin,
+    version: app.getVersion(),
+    packaged: app.isPackaged,
   }));
+
+  ipcMain.handle("update:check", () => checkForUpdate());
+  ipcMain.handle("update:install", async () => {
+    const update = await checkForUpdate();
+    if (!update.available) throw new Error("No newer release is available.");
+    return installUpdate(update.downloadUrl);
+  });
+  ipcMain.handle("uninstall", (_e, removeData) => uninstall(!!removeData));
 
   ipcMain.handle("app:set-open-at-login", (_e, on) => {
     app.setLoginItemSettings({ ...loginItem(), openAtLogin: !!on });
