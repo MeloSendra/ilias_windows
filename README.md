@@ -115,6 +115,12 @@ started directly without Node.js or a repository checkout. Releases are
 created by pushing a version tag such as `v1.2.0`; the workflow also supports
 manual runs for build verification.
 
+To create a release without editing versions and tags manually, use
+**Actions › Bump and release** on GitHub. Choose a patch, minor, or major
+bump. The workflow updates both package manifests, commits the new version to
+`main`, creates the matching `vX.Y.Z` tag, and pushes it. That tag then starts
+the release build.
+
 Packaged Windows builds can check **Settings › General › App › Check for
 updates**. Updates are downloaded from the matching GitHub Release and applied
 after the tray app exits; the app cannot replace its own running portable
