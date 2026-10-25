@@ -51,14 +51,17 @@ download concurrency are stored in the config file.
 
 ## Run automatically at Windows login
 
-After setup and a build:
+After setup and a build (or after installing the packaged `.exe`):
 
 ```powershell
-node dist\cli.js install
+node dist\cli.js install       # Node/source installation
+ilias-sync.exe install        # packaged installation
 ```
 
 This creates a per-user command file in the Windows Startup folder. It starts
-the background `watch` process when you sign in and writes its log to:
+the background `watch` process when you sign in. Packaged installations launch
+the `.exe` directly; source installations launch Node with `dist\cli.js`.
+The launcher retries after an unexpected process exit and writes its output to:
 
 ```text
 %USERPROFILE%\.config\ilias-sync\ilias-sync.log
@@ -69,6 +72,19 @@ Remove automatic startup with:
 ```powershell
 node dist\cli.js uninstall
 ```
+
+To verify the registration, run `shell:startup` from the Windows Run dialog
+and check for `ILIAS Sync.cmd`. After signing in, inspect the log if the
+process is not running:
+
+```powershell
+Get-Content "$HOME\.config\ilias-sync\ilias-sync.log" -Tail 50
+```
+
+If the log says that `dist\cli.js` is missing, rebuild before installing
+startup with `npm run build`. For a packaged installation, reinstall startup
+using the packaged executable's `install` command so the launcher points to
+the `.exe` rather than a development directory.
 
 The background process exposes a local, token-protected control API on
 `127.0.0.1`. Its temporary connection information is kept in:
